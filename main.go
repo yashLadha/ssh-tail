@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"sync"
 
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
+
+const EMPTY_STRING string = ""
 
 func determinePrivateKey(path string) (ssh.Signer, error) {
 	// A public key may be used to authenticate against the remote
@@ -50,9 +53,17 @@ func processCommands(client *ssh.Client, sshConfig sshhandler.SSHTailConfig) {
 	wg.Wait()
 }
 
+func decideJSONConfig() string {
+	return os.Getenv("SSH_TAIL_CONFIG")
+}
+
 func main() {
+	jsonConfig := decideJSONConfig()
+	if jsonConfig == EMPTY_STRING {
+		log.Fatalf("ENV variable SSH_TAIL_CONFIG is not set")
+	}
 	var sshConfig sshhandler.SSHTailConfig
-	sshConfig = sshhandler.SSHConfigParsing("ssh_tunnel.json")
+	sshConfig = sshhandler.SSHConfigParsing(jsonConfig)
 	var sshDir string
 	sshDir = sshhandler.GetSSHDir()
 	hostkeyCallback, err := determineHostsCallback(path.Join(sshDir, "known_hosts"))

@@ -7,6 +7,9 @@ implementing the local file system sink.
 It assumes that you have an unecrypted private key and present in your home
 folder inside an `.ssh` folder.
 
+To use ssh-tail you need to set and env variable while running the process
+`SSH_TAIL_CONFIG` which will pick the json config to use for the ssh session.
+
 ### Sinks
 Sinks are the interfaces which will be used to dump the data fetched from the
 ssh session running on the remote machine. These sinks can be local file system
