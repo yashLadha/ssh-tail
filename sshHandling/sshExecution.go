@@ -3,10 +3,27 @@ package sshhandler
 import (
 	"io"
 	"log"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"golang.org/x/crypto/ssh"
 )
+
+func killSignalHandler(session *ssh.Session, wg *sync.WaitGroup) {
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGKILL)
+	// Waiting for the sigkill signal to stop the waiting group
+	<-sigc
+	log.Printf("Stop handler called for the process. Stopping ssh session")
+
+	err := session.Close()
+	if err != nil {
+		log.Printf("Error while closing the ssh session %v", err)
+	}
+	wg.Done()
+}
 
 func CommandExecution(client *ssh.Client, command ExecutionCommand, wg *sync.WaitGroup) {
 	// Each ClientConn can support multiple interactive sessions,
@@ -15,8 +32,7 @@ func CommandExecution(client *ssh.Client, command ExecutionCommand, wg *sync.Wai
 	if err != nil {
 		log.Fatalf("Failed to create session: %v", err)
 	}
-	defer wg.Done()
-	defer session.Close()
+	go killSignalHandler(session, wg)
 
 	var sink io.Writer
 	sink = LocalSink(command.Outfile)

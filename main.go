@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
-	"os/signal"
 	"path"
 	"sync"
-	"syscall"
 
 	sshhandler "github.com/yashLadha/ssh-tail/sshHandling"
 
@@ -44,24 +41,12 @@ func determineHostsCallback(path string) (ssh.HostKeyCallback, error) {
 	return hostkeyCallback, err
 }
 
-func killSignalHandler(wg *sync.WaitGroup, commandsLen int) {
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGKILL)
-	// Waiting for the sigkill signal to stop the waiting group
-	<-sigc
-	log.Printf("Received stop signal closing all the waiting groups")
-	for idx := 1; idx <= commandsLen; idx++ {
-		wg.Done()
-	}
-}
-
 func processCommands(client *ssh.Client, sshConfig sshhandler.SSHTailConfig) {
 	var wg sync.WaitGroup
 	wg.Add(len(sshConfig.Commands))
 	for _, command := range sshConfig.Commands {
 		go sshhandler.CommandExecution(client, command, &wg)
 	}
-	go killSignalHandler(&wg, len(sshConfig.Commands))
 	wg.Wait()
 }
 
