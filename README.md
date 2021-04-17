@@ -31,5 +31,47 @@ local file system but later S3 or any plugin can be included.
 ❯ SSH_TAIL_CONFIG="ssh_tunnel.json" make
 ```
 
+Example cofig file:
+
+```json
+{
+  "host": "machine_ip",
+  "port": int_port_number,
+  "username": "username",
+  "commands": [
+    {
+      "command": "command_1",
+      "file": "file_1"
+    },
+    {
+      "command": "command_2",
+      "file": "file_2"
+    }
+    ...
+  ]
+}
+```
+
+## Building locally
+You can build the binary locally using the following command.
+
+```sh
+❯ make build
+```
+
+This will generate build files for targets (windows, linux and darwin).
+
+## Development / Contribution
+
+This is just a binary that i created for myself to ease my workflow. In case you
+also face similar issues or want to solve some exisisting issue, feel free to
+dive right in and send a patch my way. I would be happy to review your patch.
+
+To test out the changes locally you can use the following command.
+
+```sh
+❯ SSH_TAIL_CONFIG="ssh_tunnel.json" make
+```
+
 ## TODO
 * Allow support for encrypted private keys
