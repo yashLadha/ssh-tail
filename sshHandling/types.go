@@ -1,13 +1,14 @@
 package sshhandler
 
 type SSHTailConfig struct {
-	Username    string             `json:"username"`    // Username used for executing the ssh tunnel
-	Port        int32              `json:"port"`        // Port whitelisted for ssh tunnel
-	Host        string             `json:"host"`        // Machine IP to ssh and fetch the logs
-	Alias       bool               `json:"aliased"`     // If there is an alias exists in the config
-	AliasString string             `json:"aliasString"` // Alias string that need to be used for ssh tunnel
-	Commands    []ExecutionCommand `json:"commands"`    // Array of files to tail
-	Unique      bool               `json:"unique"`      // For every execution prefix it with the execution time for uniqueness
+	Username      string             `json:"username"`    // Username used for executing the ssh tunnel
+	Port          int32              `json:"port"`        // Port whitelisted for ssh tunnel
+	Host          string             `json:"host"`        // Machine IP to ssh and fetch the logs
+	KeyPassPhrase string             `json:"passphrase"`  // SSH key passphrase for authentication
+	Alias         bool               `json:"aliased"`     // If there is an alias exists in the config
+	AliasString   string             `json:"aliasString"` // Alias string that need to be used for ssh tunnel
+	Commands      []ExecutionCommand `json:"commands"`    // Array of files to tail
+	Unique        bool               `json:"unique"`      // For every execution prefix it with the execution time for uniqueness
 }
 
 type ExecutionCommand struct {

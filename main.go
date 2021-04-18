@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-func determinePrivateKey(path string) (ssh.Signer, error) {
+func determinePrivateKey(path string, passphrase string) (ssh.Signer, error) {
 	// A public key may be used to authenticate against the remote
 	// server by using an unencrypted PEM-encoded private key file.
 	//
@@ -27,10 +27,16 @@ func determinePrivateKey(path string) (ssh.Signer, error) {
 		return nil, err
 	}
 	// Create the Signer for this private key.
-	signer, err := ssh.ParsePrivateKey(key)
+	if passphrase == sshhandler.EMPTY_STRING {
+		signer, err := ssh.ParsePrivateKey(key)
+		if err != nil {
+			log.Fatalf("unable to parse private key: %v", err)
+		}
+		return signer, err
+	}
+	signer, err := ssh.ParsePrivateKeyWithPassphrase(key, []byte(passphrase))
 	if err != nil {
-		log.Fatalf("unable to parse private key: %v", err)
-		return nil, err
+		log.Fatalf("unable to parse private key with passphrase: %v", err)
 	}
 	return signer, err
 }
@@ -76,7 +82,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to parse the hosts file: %v", err)
 	}
-	signer, err := determinePrivateKey(path.Join(sshDir, "id_rsa"))
+	signer, err := determinePrivateKey(path.Join(sshDir, "id_rsa"), sshConfig.KeyPassPhrase)
 	if err != nil {
 		log.Fatalf("Unable to prepare private key: %v", err)
 	}

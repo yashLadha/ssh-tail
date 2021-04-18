@@ -72,7 +72,3 @@ To test out the changes locally you can use the following command.
 ```sh
 ❯ SSH_TAIL_CONFIG="ssh_tunnel.json" make
 ```
-
-## TODO
-* Allow support for encrypted private keys
-* Allow support for keys with passphrase
