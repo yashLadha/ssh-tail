@@ -25,7 +25,9 @@ func killSignalHandler(session *ssh.Session, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func CommandExecution(client *ssh.Client, command ExecutionCommand, wg *sync.WaitGroup) {
+func CommandExecution(client *ssh.Client, commandArgs ExecutionCommandArgs, wg *sync.WaitGroup) {
+	command := commandArgs.Command
+	prefix := commandArgs.Prefix
 	// Each ClientConn can support multiple interactive sessions,
 	// represented by a Session.
 	session, err := client.NewSession()
@@ -35,8 +37,12 @@ func CommandExecution(client *ssh.Client, command ExecutionCommand, wg *sync.Wai
 	go killSignalHandler(session, wg)
 
 	var sink io.Writer
-	if command.Outfile != "" {
-		sink = LocalSink(command.Outfile)
+	if command.Outfile != EMPTY_STRING {
+		fileName := command.Outfile
+		if prefix != EMPTY_STRING {
+			fileName = prefix + "-" + fileName
+		}
+		sink = LocalSink(fileName)
 	} else {
 		sink = os.Stdout
 	}

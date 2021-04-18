@@ -7,14 +7,13 @@ import (
 	"os"
 	"path"
 	"sync"
+	"time"
 
 	sshhandler "github.com/yashLadha/ssh-tail/sshHandling"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
-
-const EMPTY_STRING string = ""
 
 func determinePrivateKey(path string) (ssh.Signer, error) {
 	// A public key may be used to authenticate against the remote
@@ -47,8 +46,15 @@ func determineHostsCallback(path string) (ssh.HostKeyCallback, error) {
 func processCommands(client *ssh.Client, sshConfig sshhandler.SSHTailConfig) {
 	var wg sync.WaitGroup
 	wg.Add(len(sshConfig.Commands))
+	var prefix string
+	if sshConfig.Unique {
+		prefix = time.Now().Format(time.RFC3339)
+	}
 	for _, command := range sshConfig.Commands {
-		go sshhandler.CommandExecution(client, command, &wg)
+		go sshhandler.CommandExecution(client, sshhandler.ExecutionCommandArgs{
+			Command: command,
+			Prefix:  prefix,
+		}, &wg)
 	}
 	wg.Wait()
 }
@@ -59,7 +65,7 @@ func decideJSONConfig() string {
 
 func main() {
 	jsonConfig := decideJSONConfig()
-	if jsonConfig == EMPTY_STRING {
+	if jsonConfig == sshhandler.EMPTY_STRING {
 		log.Fatalf("ENV variable SSH_TAIL_CONFIG is not set")
 	}
 	var sshConfig sshhandler.SSHTailConfig

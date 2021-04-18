@@ -7,9 +7,17 @@ type SSHTailConfig struct {
 	Alias       bool               `json:"aliased"`     // If there is an alias exists in the config
 	AliasString string             `json:"aliasString"` // Alias string that need to be used for ssh tunnel
 	Commands    []ExecutionCommand `json:"commands"`    // Array of files to tail
+	Unique      bool               `json:"unique"`      // For every execution prefix it with the execution time for uniqueness
 }
 
 type ExecutionCommand struct {
 	CommandStr string `json:"command"` // Command that need to be executed on the terminal
 	Outfile    string `json:"file"`    // Explicit file on file system to dump the Stdio from ssh session
 }
+
+type ExecutionCommandArgs struct {
+	Command ExecutionCommand // Main Execution command for the ssh.Session
+	Prefix  string           // Prefix for the result file, set up for the uniqueness constraint
+}
+
+const EMPTY_STRING string = ""
