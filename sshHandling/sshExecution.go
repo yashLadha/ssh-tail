@@ -35,7 +35,11 @@ func CommandExecution(client *ssh.Client, command ExecutionCommand, wg *sync.Wai
 	go killSignalHandler(session, wg)
 
 	var sink io.Writer
-	sink = LocalSink(command.Outfile)
+	if command.Outfile != "" {
+		sink = LocalSink(command.Outfile)
+	} else {
+		sink = os.Stdout
+	}
 	// Piping the response from the ssh session to the file and need an object which
 	// implements io.Writer interface so that it can be used by the ssh session to
 	// dump the output
