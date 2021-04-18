@@ -12,7 +12,10 @@ dashboards, script and machine for the session.
 
 To solve this comes `ssh-tail`. It is a
 binary to tail log files from remote ssh machines and store them locally
-into your system for debugging or storage purpose.
+into your system for debugging or storage purpose. It is controlled by a JSON
+config which saves me time of creating multiple ssh-session either using a
+window managers or some bash script which does that for me. Logic for creating
+new filenames based on the unique flag.
 
 It assumes that you have an unecrypted private key and present in your home
 folder inside an `.ssh` folder.
