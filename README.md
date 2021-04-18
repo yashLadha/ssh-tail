@@ -75,3 +75,4 @@ To test out the changes locally you can use the following command.
 
 ## TODO
 * Allow support for encrypted private keys
+* Allow support for keys with passphrase
