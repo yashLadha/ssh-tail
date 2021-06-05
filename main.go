@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 
 	sshhandler "github.com/yashLadha/ssh-tail/sshHandling"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
@@ -66,20 +69,43 @@ func decideJSONConfig() string {
 
 func main() {
 	jsonConfig := fetchJSONConfig()
-	var sshConfig sshhandler.SSHTailConfig
-	sshConfig = sshhandler.SSHConfigParsing(jsonConfig)
-	var sshDir string
-	sshDir = sshhandler.GetSSHDir()
+	sshConfig := sshhandler.SSHConfigParsing(jsonConfig)
+	sshDir := sshhandler.GetSSHDir()
 	hostkeyCallback := determineHosts(sshDir)
 	signer := fetchPrivateKey(sshDir, sshConfig)
-	config := createSSHConfig(sshConfig, signer, hostkeyCallback)
-	var machineIP string
-	machineIP = fmt.Sprintf("%s:%d", sshConfig.Host, sshConfig.Port)
-	log.Printf("Initiating connection to %s", machineIP)
-	client := sshPublicConnection(machineIP, config)
+	var client *ssh.Client
+	if sshConfig.ProxyConfig != nil {
+		client = privateSSH(sshConfig, signer, hostkeyCallback)
+	} else {
+		config := createSSHConfig(sshConfig, signer, hostkeyCallback)
+		machineIP := fmt.Sprintf("%s:%d", sshConfig.Host, sshConfig.Port)
+		log.Printf("Initiating connection to %s", machineIP)
+		client = sshPublicConnection(machineIP, config)
+	}
 	defer client.Close()
-
 	processCommands(client, sshConfig)
+}
+
+func privateSSH(sshConfig sshhandler.SSHTailConfig, signer ssh.Signer, hostkeyCallback ssh.HostKeyCallback) *ssh.Client {
+	proxyConfig := createSSHConfig(*sshConfig.ProxyConfig, signer, hostkeyCallback)
+	proxyMachineIP := net.JoinHostPort(sshConfig.ProxyConfig.Host, strconv.Itoa(int(sshConfig.ProxyConfig.Port)))
+	log.Printf("Initiating connection to proxy: %s\n", proxyMachineIP)
+	proxyClient, err := ssh.Dial("tcp", proxyMachineIP, proxyConfig)
+	if err != nil {
+		log.Fatalf("Error in setting up proxy connection %v", err)
+	}
+	machineIP := net.JoinHostPort(sshConfig.Host, strconv.Itoa(int(sshConfig.Port)))
+	clientConn, err := proxyClient.Dial("tcp", machineIP)
+	if err != nil {
+		log.Fatalf("Error in dialing connection from proxy: %v", err)
+	}
+	targetConfig := createSSHConfig(sshConfig, signer, hostkeyCallback)
+	ncc, chans, reqs, err := ssh.NewClientConn(clientConn, machineIP, targetConfig)
+	if err != nil {
+		log.Fatalf("Error in creating new client connection %v", err)
+	}
+	log.Printf("Connected %s\n", machineIP)
+	return ssh.NewClient(ncc, chans, reqs)
 }
 
 func determineHosts(sshDir string) ssh.HostKeyCallback {
@@ -108,12 +134,14 @@ func sshPublicConnection(machineIP string, config *ssh.ClientConfig) *ssh.Client
 }
 
 func createSSHConfig(sshConfig sshhandler.SSHTailConfig, signer ssh.Signer, hostkeyCallback ssh.HostKeyCallback) *ssh.ClientConfig {
+	auths := []ssh.AuthMethod{}
+	auths = append(auths, ssh.PublicKeys(signer))
+	if sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		auths = append(auths, ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers))
+	}
 	config := &ssh.ClientConfig{
-		User: sshConfig.Username,
-		Auth: []ssh.AuthMethod{
-
-			ssh.PublicKeys(signer),
-		},
+		User:            sshConfig.Username,
+		Auth:            auths,
 		HostKeyCallback: hostkeyCallback,
 	}
 	return config
