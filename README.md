@@ -18,7 +18,7 @@ window managers or some bash script which does that for me. Logic for creating
 new filenames based on the unique flag.
 
 It assumes that you have an unecrypted private key and present in your home
-folder inside an `.ssh` folder.
+folder inside an `.ssh` folder and `ssh-agent` is running on your machine.
 
 To use ssh-tail you need to set and env variable while running the process
 `SSH_TAIL_CONFIG` which will pick the json config to use for the ssh session.
@@ -49,6 +49,28 @@ Example cofig file:
     {
       "command": "command_2",
       "file": "file_2"
+    }
+    ...
+  ]
+}
+```
+
+For use with machines that are behind a proxy:
+
+```json
+{
+  "host": "target_machine_ip",
+  "port": target_machine_port,
+  "username": "username",
+  "proxyConfig": {
+    "host": "proxy_machine_ip / hop_ip",
+    "port": proxy_jump_machine_port,
+    "username": "proxy_jump_username"
+  },
+  "commands": [
+    {
+      "command": "command_1",
+      "file": file_1
     }
     ...
   ]
