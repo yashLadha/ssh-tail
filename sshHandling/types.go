@@ -22,4 +22,4 @@ type ExecutionCommandArgs struct {
 	Prefix  string           // Prefix for the result file, set up for the uniqueness constraint
 }
 
-const EMPTY_STRING string = ""
+const EmptyString string = ""

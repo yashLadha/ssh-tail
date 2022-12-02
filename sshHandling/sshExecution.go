@@ -1,6 +1,7 @@
 package sshhandler
 
 import (
+	"github.com/yashLadha/ssh-tail/sshHandling/sinks"
 	"io"
 	"log"
 	"os"
@@ -12,11 +13,11 @@ import (
 )
 
 func killSignalHandler(session *ssh.Session, wg *sync.WaitGroup) {
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGKILL)
+	sigChannel := make(chan os.Signal, 1)
+	signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGKILL)
 	// Waiting for the sigkill signal to stop the waiting group
-	<-sigc
-	log.Printf("Stop handler called for the process. Stopping ssh session")
+	<-sigChannel
+	log.Printf("Stop signal received for the process. Stopping ssh session")
 
 	err := session.Close()
 	if err != nil {
@@ -37,12 +38,12 @@ func CommandExecution(client *ssh.Client, commandArgs ExecutionCommandArgs, wg *
 	go killSignalHandler(session, wg)
 
 	var sink io.Writer
-	if command.Outfile != EMPTY_STRING {
+	if command.Outfile != EmptyString {
 		fileName := command.Outfile
-		if prefix != EMPTY_STRING {
+		if prefix != EmptyString {
 			fileName = prefix + "-" + fileName
 		}
-		sink = LocalSink(fileName)
+		sink = sinks.LocalSink(fileName)
 	} else {
 		sink = os.Stdout
 	}

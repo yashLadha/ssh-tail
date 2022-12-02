@@ -24,14 +24,16 @@ To use ssh-tail you need to set and env variable while running the process
 `SSH_TAIL_CONFIG` which will pick the json config to use for the ssh session.
 
 ### Sinks
+
 Sinks are the interfaces which will be used to dump the data fetched from the
 ssh session running on the remote machine. These sinks can be local file system
 or an external service like S3. For now the implementation is only made for the
 local file system but later S3 or any plugin can be included.
 
 ### Usage
+
 ```sh
-❯ SSH_TAIL_CONFIG="ssh_tunnel.json" make
+SSH_TAIL_CONFIG="ssh_tunnel.json" make
 ```
 
 Example cofig file:
@@ -78,10 +80,11 @@ For use with machines that are behind a proxy:
 ```
 
 ## Building locally
+
 You can build the binary locally using the following command.
 
 ```sh
-❯ make build
+make build
 ```
 
 This will generate build files for targets (windows, linux and darwin).
@@ -89,11 +92,11 @@ This will generate build files for targets (windows, linux and darwin).
 ## Development / Contribution
 
 This is just a binary that i created for myself to ease my workflow. In case you
-also face similar issues or want to solve some exisisting issue, feel free to
+also face similar issues or want to solve some existing issue, feel free to
 dive right in and send a patch my way. I would be happy to review your patch.
 
 To test out the changes locally you can use the following command.
 
 ```sh
-❯ SSH_TAIL_CONFIG="ssh_tunnel.json" make
+SSH_TAIL_CONFIG="ssh_tunnel.json" make
 ```

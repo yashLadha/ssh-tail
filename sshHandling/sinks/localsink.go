@@ -1,4 +1,4 @@
-package sshhandler
+package sinks
 
 import (
 	"io"
